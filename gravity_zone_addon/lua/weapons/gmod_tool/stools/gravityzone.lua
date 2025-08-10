@@ -84,9 +84,10 @@ if SERVER then
 end
 
 if CLIENT then
-  cvars.CreateClientConVar("gravityzone_showzones", "1", true, false, "Show gravity zone volumes")
+  CreateClientConVar("gravityzone_showzones", "1", true, false, "Show gravity zone volumes")
   hook.Add("Think", "gravityzone_send_show", function()
-    local want = cvars.Number("gravityzone_showzones", 1) ~= 0
+    local cv = GetConVar("gravityzone_showzones")
+    local want = cv and cv:GetBool() or true
     if LocalPlayer()._gravityZoneShow ~= want then
       LocalPlayer()._gravityZoneShow = want
       net.Start("gravityzone_showzones")
