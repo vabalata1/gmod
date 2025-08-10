@@ -63,6 +63,21 @@ if SERVER then
   hook.Add("GetFallDamage", "gravity_zone_fall_damage", function(ply, speed)
     if IsValid(ply.CurrentGravityZone) then return 0 end
   end)
+
+  -- Demo command: spawns a gravity zone pulling toward the surface you are looking at
+  concommand.Add("gz_demo", function(ply)
+    if not IsValid(ply) then return end
+    local tr = ply:GetEyeTrace()
+    local zone = ents.Create("ent_gravity_zone")
+    zone:SetPos(tr.HitPos + tr.HitNormal * 8)
+    zone:Spawn()
+    zone:SetGravityVector(-tr.HitNormal)
+    zone:SetGravityAccel(600)
+    zone:SetAngles(Angle(0, ply:EyeAngles().y, 0))
+    if zone.SetExtents then
+      zone:SetExtents(Vector(-128, -128, -64), Vector(128, 128, 64))
+    end
+  end)
 end
 
 if CLIENT then
