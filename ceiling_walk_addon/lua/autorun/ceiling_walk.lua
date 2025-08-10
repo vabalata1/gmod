@@ -172,6 +172,16 @@ if CLIENT then
     local targetUp = normal
     local forward = angles:Forward()
     local newAngles = buildAnglesFromForwardUp(forward, targetUp)
+
+    -- Keep a comfortable eye distance from the ceiling plane (simulate feet-on-ceiling)
+    local eyeHeight = ply:Crouching() and ply:GetViewOffsetDucked().z or ply:GetViewOffset().z
+    local currentDist = (origin - point):Dot(normal)
+    local desired = math.Clamp(eyeHeight, 40, 70)
+    if currentDist < desired then
+      local delta = desired - currentDist
+      origin = origin - targetUp * delta
+    end
+
     return { origin = origin, angles = newAngles, fov = fov, znear = znear, zfar = zfar, drawviewer = false }
   end)
 end
