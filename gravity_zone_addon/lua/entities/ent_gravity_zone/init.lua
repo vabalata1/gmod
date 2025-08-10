@@ -46,6 +46,7 @@ function ENT:StartTouch(ent)
   if not IsValid(ent) or not ent:IsPlayer() then return end
   self._touchingPlayers[ent] = true
   ent.CurrentGravityZone = self
+  ent:SetNWEntity("GravityZone", self)
   ent._gravityZoneOldGravity = ent:GetGravity()
   ent:SetGravity(0.0001) -- neutralize base gravity so our custom gravity dominates
 end
@@ -55,6 +56,9 @@ function ENT:EndTouch(ent)
   self._touchingPlayers[ent] = nil
   if ent.CurrentGravityZone == self then
     ent.CurrentGravityZone = nil
+  end
+  if ent:GetNWEntity("GravityZone") == self then
+    ent:SetNWEntity("GravityZone", NULL)
   end
   if ent._gravityZoneOldGravity then
     ent:SetGravity(ent._gravityZoneOldGravity)
@@ -68,6 +72,11 @@ function ENT:OnRemove()
   for ply, _ in pairs(self._touchingPlayers or {}) do
     if IsValid(ply) and ply.CurrentGravityZone == self then
       ply.CurrentGravityZone = nil
+    end
+    if IsValid(ply) and ply:GetNWEntity("GravityZone") == self then
+      ply:SetNWEntity("GravityZone", NULL)
+    end
+    if IsValid(ply) then
       if ply._gravityZoneOldGravity then
         ply:SetGravity(ply._gravityZoneOldGravity)
         ply._gravityZoneOldGravity = nil
