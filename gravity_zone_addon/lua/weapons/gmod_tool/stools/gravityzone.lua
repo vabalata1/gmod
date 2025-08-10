@@ -16,6 +16,7 @@ TOOL.ClientConVar["maxx"] = 256
 TOOL.ClientConVar["maxy"] = 256
 TOOL.ClientConVar["maxz"] = 128
 TOOL.ClientConVar["accel"] = 600
+TOOL.ClientConVar["showzones"] = 1
 
 local function getZone(ply, trace)
   local ent = trace.Entity
@@ -61,6 +62,40 @@ function TOOL:Reload(trace)
   return true
 end
 
+if SERVER then
+  util.AddNetworkString("gravityzone_showzones")
+  net.Receive("gravityzone_showzones", function(len, ply)
+    local show = net.ReadBool()
+    ply._gravityZoneShow = show and true or false
+  end)
+
+  concommand.Add("gravityzone_remove_target", function(ply)
+    local tr = ply:GetEyeTrace()
+    if IsValid(tr.Entity) and tr.Entity:GetClass() == "ent_gravity_zone" then
+      tr.Entity:Remove()
+    end
+  end)
+
+  concommand.Add("gravityzone_remove_all", function(ply)
+    for _, ent in ipairs(ents.FindByClass("ent_gravity_zone")) do
+      if IsValid(ent) then ent:Remove() end
+    end
+  end)
+end
+
+if CLIENT then
+  cvars.CreateClientConVar("gravityzone_showzones", "1", true, false, "Show gravity zone volumes")
+  hook.Add("Think", "gravityzone_send_show", function()
+    local want = cvars.Number("gravityzone_showzones", 1) ~= 0
+    if LocalPlayer()._gravityZoneShow ~= want then
+      LocalPlayer()._gravityZoneShow = want
+      net.Start("gravityzone_showzones")
+      net.WriteBool(want)
+      net.SendToServer()
+    end
+  end)
+end
+
 function TOOL.BuildCPanel(panel)
   panel:AddControl("Header", { Description = "Place and configure gravity zones." })
 
@@ -75,4 +110,8 @@ function TOOL.BuildCPanel(panel)
   panel:NumSlider("max x", "gravityzone_maxx", 0, 1024, 0)
   panel:NumSlider("max y", "gravityzone_maxy", 0, 1024, 0)
   panel:NumSlider("max z", "gravityzone_maxz", 0, 1024, 0)
+
+  panel:CheckBox("Afficher les zones", "gravityzone_showzones")
+  panel:Button("Supprimer la zone visée", "gravityzone_remove_target")
+  panel:Button("Supprimer toutes les zones", "gravityzone_remove_all")
 end
